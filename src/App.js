@@ -5,7 +5,7 @@ import Thumbsnails from './components/thumbsnails';
 function App() {
   return (
     <div className="App">
-		<Thumbsnails interval={10000}/>
+		<Thumbsnails />
     </div>
   );
 }
