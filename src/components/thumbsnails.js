@@ -1,5 +1,6 @@
 // @ts-check
 import React, { PureComponent } from 'react';
+import '../App.css';
 
 const styles = ({
 	imageWrapper: {
@@ -8,6 +9,7 @@ const styles = ({
 	},
 	imageStyles: {
 		display: 'inline-block',
+		borderRadius: '20px',
 		height: 'auto',
 		margin: '1%',
 		maxWidth: '98%',
@@ -17,7 +19,7 @@ const styles = ({
 		border: '2px solid grey',
 		margin: '0 10% auto'
 	},
-	endOfList: {
+	titlesStyles: {
 		textAlign: 'center'
 	}
 })
@@ -34,7 +36,8 @@ export default class ThumbsNails extends PureComponent {
 		this.imageRef = React.createRef();
 		this.state = {
 			fetchedTimestamps: [],
-			startingTimeStamp: 1500348260
+			startingTimeStamp: 1500348260,
+			loading: true
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
@@ -43,6 +46,9 @@ export default class ThumbsNails extends PureComponent {
 
 	componentDidMount() {
 		this.generateArrayOfTimestamps();
+		this.setState({
+			loading: false
+		})
 	}
 
 	componentWillMount() {
@@ -101,17 +107,26 @@ export default class ThumbsNails extends PureComponent {
 
 	render() {
 		const {
-			state: { startingTimeStamp },
-			props: { lastTimeStamp }
+			state: {
+				loading,
+				startingTimeStamp
+			},
+			props: {
+				lastTimeStamp
+			}
 		} = this;
-		console.log("startingTimeStamp", startingTimeStamp);
-		console.log("lastTimeStamp", lastTimeStamp)
+		
+		if(loading) {
+			return (
+				<h1 style={styles.titlesStyles}>Loading...</h1>
+			)
+		}
 		return(
 			<div
 				style={styles.imageWrapper}
 			>
 				{this.renderThumbs()}
-				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.endOfList}>End of list</h1>} 
+				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>End of list</h1>} 
 			</div>
 		);
 	}
