@@ -24,7 +24,7 @@ export default class ThumbsNails extends PureComponent {
 		this.imageRef = React.createRef();
 		this.state = {
 			fetchedTimestamps: [],
-			currentImageTimestamp: 1500348260
+			startingTimeStamp: 1500348260
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
@@ -32,10 +32,11 @@ export default class ThumbsNails extends PureComponent {
 	}
 
 	componentDidMount() {
-		this.generateArrayOfTimestamps(20, 40);
+		// this.generateArrayOfTimestamps(20, 40);
 	}
 
 	componentWillMount() {
+		this.generateArrayOfTimestamps(20, 40);
 		this.scrollListener = window.addEventListener("scroll", e => {
 			const lastImgOffset = this.imageRef.current.offsetTop + this.imageRef.current.clientHeight;
 			const pageOffset = window.pageYOffset + window.innerHeight;
@@ -47,11 +48,11 @@ export default class ThumbsNails extends PureComponent {
 	}
 
 	generateArrayOfTimestamps(limit = 20, interval = 20) {
-		const { fetchedTimestamps, currentImageTimestamp } = this.state;
-		let currentTimeStamp = currentImageTimestamp;
+		const { fetchedTimestamps, startingTimeStamp } = this.state;
+		let currentTimeStamp = startingTimeStamp;
 		const arrayOfTimeStamps = Array.apply(null, {length: limit}).map(() => currentTimeStamp += interval);
 		this.setState({
-			currentImageTimestamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
+			startingTimeStamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
 			fetchedTimestamps: [...fetchedTimestamps, ...arrayOfTimeStamps]
 		})
 
@@ -59,14 +60,16 @@ export default class ThumbsNails extends PureComponent {
 
 	renderThumbs() {
 		const { fetchedTimestamps } = this.state;
-		console.log(fetchedTimestamps);
+
 		return fetchedTimestamps.map((timeStamp) => {
+			const date = new Date(timeStamp*1000).toUTCString();
 			const url = `http://hiring.verkada.com/thumbs/${timeStamp}.jpg`;
+
 			return(
 				<img
-					ref={this.imageRef}
 					key={timeStamp}
-					alt={`thumbnail ${timeStamp}`}
+					ref={this.imageRef}
+					alt={date}
 					src={url}
 					style={styles.imageStyles}
 				/>
