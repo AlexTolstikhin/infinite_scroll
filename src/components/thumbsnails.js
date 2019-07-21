@@ -31,10 +31,6 @@ export default class ThumbsNails extends PureComponent {
 		this.renderThumbs = this.renderThumbs.bind(this);
 	}
 
-	componentDidMount() {
-		// this.generateArrayOfTimestamps(20, 40);
-	}
-
 	componentWillMount() {
 		this.generateArrayOfTimestamps(20, 40);
 		this.scrollListener = window.addEventListener("scroll", e => {
