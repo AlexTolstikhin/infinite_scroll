@@ -7,14 +7,16 @@ const styles = ({
 		margin: '0 10% auto',
 		maxWidth: '80%'
 	},
-	imageStyles: {
-		display: 'inline-block',
+	imageStyles: (screenWidth) => ({
+		display: screenWidth > 400 ? 'inline-block' : 'block',
 		borderRadius: '20px',
 		height: 'auto',
 		margin: '1%',
 		maxWidth: '98%',
-		width: '30%'
-	},
+		width:	screenWidth > 600 ? '30%'
+					: screenWidth < 600 && screenWidth > 400 ? '45%'
+					: '100%'
+	}),
 	mainWrapper: {
 		border: '2px solid grey',
 		margin: '0 10% auto'
@@ -37,14 +39,17 @@ export default class ThumbsNails extends PureComponent {
 		this.state = {
 			fetchedTimestamps: [],
 			startingTimeStamp: 1500348260,
-			loading: true
+			loading: true,
+			screenWidth: 0
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
 		this.renderThumbs = this.renderThumbs.bind(this);
+		this.updateScreenWidth = this.updateScreenWidth.bind(this);
 	}
 
 	componentDidMount() {
+		window.addEventListener("resize", this.updateScreenWidth);
 		this.generateArrayOfTimestamps();
 		this.setState({
 			loading: false
@@ -55,6 +60,7 @@ export default class ThumbsNails extends PureComponent {
 		const {
 			props: { lastTimeStamp }
 		} = this;
+		this.updateScreenWidth();
 		this.scrollListener = window.addEventListener("scroll", e => {
 			const currentImage = this.imageRef.current;
 			const imageTimeStamp = currentImage ? parseInt(currentImage.alt) : lastTimeStamp;
@@ -66,6 +72,10 @@ export default class ThumbsNails extends PureComponent {
 				}
 			}
 		});
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener("resize", this.updateScreenWidth);
 	}
 
 	generateArrayOfTimestamps() {
@@ -88,9 +98,18 @@ export default class ThumbsNails extends PureComponent {
 
 	}
 
+	updateScreenWidth() {
+		this.setState({
+			screenWidth: window.innerWidth
+		})
+	}
+
 	renderThumbs() {
-		const { fetchedTimestamps } = this.state;
-	
+		const {
+			fetchedTimestamps,
+			screenWidth
+		} = this.state;
+		console.log(screenWidth);
 		return fetchedTimestamps.map((timeStamp) => {
 			const url = `http://hiring.verkada.com/thumbs/${timeStamp}.jpg`;
 			return(
@@ -99,7 +118,7 @@ export default class ThumbsNails extends PureComponent {
 					ref={this.imageRef}
 					alt={timeStamp}
 					src={url}
-					style={styles.imageStyles}
+					style={styles.imageStyles(screenWidth)}
 				/>
 			);
 		})
