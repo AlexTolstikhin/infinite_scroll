@@ -25,7 +25,7 @@ const styles = ({
 	}
 })
 
-export default class ThumbsNails extends PureComponent {
+export default class Thumbsnails extends PureComponent {
 	static propTypes = {
 		allowedTimestampsIntervals: PropTypes.array,
 		endOfListText: PropTypes.string,

@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Thumbsnails should render 2 images 1`] = `
+"<div style={{...}}>
+  <img alt=\\"foo\\" src=\\"http://hiring.verkada.com/thumbs/foo.jpg\\" style={{...}} />
+  <img alt=\\"foo\\" src=\\"http://hiring.verkada.com/thumbs/foo.jpg\\" style={{...}} />
+</div>"
+`;
+
+exports[`Thumbsnails should render No results 1`] = `
+"<div style={{...}}>
+  <h1 style={{...}}>
+    No Results Found
+  </h1>
+</div>"
+`;
+
+exports[`Thumbsnails should render end of list 1`] = `
+"<div style={{...}}>
+  <h1 style={{...}}>
+    No Results Found
+  </h1>
+  <h1 style={{...}}>
+    End of List
+  </h1>
+</div>"
+`;
+
+exports[`Thumbsnails should render loading 1`] = `
+"<h1 style={{...}}>
+  $
+  Loading...
+</h1>"
+`;
