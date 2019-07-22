@@ -1,5 +1,11 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## How to start
+1. Clone or copy project to your machine.
+2. Go to `infinite_scroll` folder
+3. Run `npm install` to install node_modules
+4. Run `npm start` to start localhost
+
 ## Available Scripts
 
 In the project directory, you can run:
