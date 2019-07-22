@@ -7,8 +7,8 @@ const styles = ({
 		maxWidth: '80%'
 	},
 	imageStyles: (screenWidth) => ({
-		display: screenWidth > 400 ? 'inline-block' : 'block',
 		borderRadius: '20px',
+		display: screenWidth > 400 ? 'inline-block' : 'block',
 		height: 'auto',
 		margin: '1%',
 		maxWidth: '98%',
@@ -28,16 +28,18 @@ const styles = ({
 export default class ThumbsNails extends PureComponent {
 	static propTypes = {
 		allowedTimestamps: PropTypes.array,
-		limit: PropTypes.number,
 		interval: PropTypes.number,
-		lastTimeStamp: PropTypes.number
+		lastTimeStamp: PropTypes.number,
+		limit: PropTypes.number,
+		startingTimeStamp: PropTypes.number
 	}
 
 	static defaultProps = {
 		allowedTimestamps: ['20', '40', '60', '80', '00'],
-		limit: 20,
 		interval: 20,
-		lastTimeStamp: 1503031520
+		lastTimeStamp: 1503031520,
+		limit: 20,
+		startingTimeStamp: 1500348260
 	}
 
 	constructor(props){
@@ -45,9 +47,9 @@ export default class ThumbsNails extends PureComponent {
 		this.imageRef = React.createRef();
 		this.state = {
 			fetchedTimestamps: [],
-			startingTimeStamp: 1500348260,
 			loading: true,
-			screenWidth: 0
+			screenWidth: 0,
+			startingTimeStamp: props.startingTimeStamp
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
