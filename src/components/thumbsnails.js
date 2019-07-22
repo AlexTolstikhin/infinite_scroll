@@ -1,6 +1,5 @@
-// @ts-check
 import React, { PureComponent } from 'react';
-import '../App.css';
+import PropTypes from 'prop-types';
 
 const styles = ({
 	imageWrapper: {
@@ -14,8 +13,8 @@ const styles = ({
 		margin: '1%',
 		maxWidth: '98%',
 		width:	screenWidth > 600 ? '30%'
-					: screenWidth < 600 && screenWidth > 400 ? '45%'
-					: '100%'
+			: screenWidth < 600 && screenWidth > 400 ? '45%'
+			: '100%'
 	}),
 	mainWrapper: {
 		border: '2px solid grey',
@@ -27,7 +26,15 @@ const styles = ({
 })
 
 export default class ThumbsNails extends PureComponent {
+	static propTypes = {
+		allowedTimestamps: PropTypes.array,
+		limit: PropTypes.number,
+		interval: PropTypes.number,
+		lastTimeStamp: PropTypes.number
+	}
+
 	static defaultProps = {
+		allowedTimestamps: ['20', '40', '60', '80', '00'],
 		limit: 20,
 		interval: 20,
 		lastTimeStamp: 1503031520
@@ -60,6 +67,7 @@ export default class ThumbsNails extends PureComponent {
 		const {
 			props: { lastTimeStamp }
 		} = this;
+
 		this.updateScreenWidth();
 		this.scrollListener = window.addEventListener("scroll", e => {
 			const currentImage = this.imageRef.current;
@@ -78,6 +86,11 @@ export default class ThumbsNails extends PureComponent {
 		window.removeEventListener("resize", this.updateScreenWidth);
 	}
 
+	/**
+	 * generateArrayOfTimestamps method that updates startingTimeStamp and fetchedTimestamps array in state
+	 *
+	 * @return  {Object} new state  
+	 */
 	generateArrayOfTimestamps() {
 		const {
 			state: {
@@ -85,12 +98,16 @@ export default class ThumbsNails extends PureComponent {
 				startingTimeStamp
 			},
 			props: {
+				allowedTimestamps,
 				limit,
 				interval
 			}
 		} = this;
 		let currentTimeStamp = startingTimeStamp;
-		const arrayOfTimeStamps = Array.apply(null, {length: limit}).map(() => currentTimeStamp += interval);
+		const arrayOfTimeStamps = Array
+			.apply(null, {length: limit < 20 ? 20 : limit})
+			.map(() => currentTimeStamp += interval)
+			.filter((item) => allowedTimestamps.includes(item.toString().slice(-2)));
 		this.setState({
 			startingTimeStamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
 			fetchedTimestamps: [...fetchedTimestamps, ...arrayOfTimeStamps]
@@ -98,18 +115,27 @@ export default class ThumbsNails extends PureComponent {
 
 	}
 
+	/**
+	 * updateScreenWidth updates screenWidth state prop
+	 *
+	 * @return  {Object}  new state
+	 */
 	updateScreenWidth() {
 		this.setState({
 			screenWidth: window.innerWidth
 		})
 	}
 
+	/**
+	 * renderThumbs renders thumbs
+	 *
+	 * @return  {Node} 
+	 */
 	renderThumbs() {
 		const {
 			fetchedTimestamps,
 			screenWidth
 		} = this.state;
-		console.log(screenWidth);
 		return fetchedTimestamps.map((timeStamp) => {
 			const url = `http://hiring.verkada.com/thumbs/${timeStamp}.jpg`;
 			return(
@@ -127,6 +153,7 @@ export default class ThumbsNails extends PureComponent {
 	render() {
 		const {
 			state: {
+				fetchedTimestamps,
 				loading,
 				startingTimeStamp
 			},
@@ -144,7 +171,8 @@ export default class ThumbsNails extends PureComponent {
 			<div
 				style={styles.imageWrapper}
 			>
-				{this.renderThumbs()}
+				{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>No Results Found</h1>}
+				{!!fetchedTimestamps.length && this.renderThumbs()}
 				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>End of list</h1>} 
 			</div>
 		);

@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import Thumbsnails from './components/thumbsnails';
 
 function App() {
