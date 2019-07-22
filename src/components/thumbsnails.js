@@ -27,19 +27,27 @@ const styles = ({
 
 export default class ThumbsNails extends PureComponent {
 	static propTypes = {
-		allowedTimestamps: PropTypes.array,
+		allowedTimestampsIntervals: PropTypes.array,
+		endOfListText: PropTypes.string,
 		interval: PropTypes.number,
 		lastTimeStamp: PropTypes.number,
 		limit: PropTypes.number,
-		startingTimeStamp: PropTypes.number
+		noResultsText: PropTypes.string,
+		startingTimeStamp: PropTypes.number,
+		thumbExtension: PropTypes.string,
+		urlPath: PropTypes.string
 	}
 
 	static defaultProps = {
-		allowedTimestamps: ['20', '40', '60', '80', '00'],
+		allowedTimestampsIntervals: ['20', '40', '60', '80', '00'],
+		endOfListText: 'End of List',
 		interval: 20,
 		lastTimeStamp: 1503031520,
 		limit: 20,
-		startingTimeStamp: 1500348260
+		noResultsText: 'No Results Found',
+		startingTimeStamp: 1500348260,
+		thumbExtension: '.jpg',
+		urlPath: 'http://hiring.verkada.com/thumbs/'
 	}
 
 	constructor(props){
@@ -100,7 +108,7 @@ export default class ThumbsNails extends PureComponent {
 				startingTimeStamp
 			},
 			props: {
-				allowedTimestamps,
+				allowedTimestampsIntervals,
 				limit,
 				interval
 			}
@@ -109,7 +117,7 @@ export default class ThumbsNails extends PureComponent {
 		const arrayOfTimeStamps = Array
 			.apply(null, {length: limit < 20 ? 20 : limit})
 			.map(() => currentTimeStamp += interval)
-			.filter((item) => allowedTimestamps.includes(item.toString().slice(-2)));
+			.filter((item) => allowedTimestampsIntervals.includes(item.toString().slice(-2)));
 		this.setState({
 			startingTimeStamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
 			fetchedTimestamps: [...fetchedTimestamps, ...arrayOfTimeStamps]
@@ -135,11 +143,17 @@ export default class ThumbsNails extends PureComponent {
 	 */
 	renderThumbs() {
 		const {
-			fetchedTimestamps,
-			screenWidth
-		} = this.state;
+			state: {
+				fetchedTimestamps,
+				screenWidth
+			},
+			props: {
+				thumbExtension,
+				urlPath
+			}
+		} = this;
 		return fetchedTimestamps.map((timeStamp) => {
-			const url = `http://hiring.verkada.com/thumbs/${timeStamp}.jpg`;
+			const url = `${urlPath}${timeStamp}${thumbExtension}`;
 			return(
 				<img
 					key={timeStamp}
@@ -160,7 +174,9 @@ export default class ThumbsNails extends PureComponent {
 				startingTimeStamp
 			},
 			props: {
-				lastTimeStamp
+				endOfListText,
+				lastTimeStamp,
+				noResultsText
 			}
 		} = this;
 		
@@ -173,9 +189,9 @@ export default class ThumbsNails extends PureComponent {
 			<div
 				style={styles.imageWrapper}
 			>
-				{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>No Results Found</h1>}
+				{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>{noResultsText}</h1>}
 				{!!fetchedTimestamps.length && this.renderThumbs()}
-				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>End of list</h1>} 
+				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>{endOfListText}</h1>} 
 			</div>
 		);
 	}
