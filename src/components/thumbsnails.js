@@ -32,6 +32,7 @@ export default class ThumbsNails extends PureComponent {
 		interval: PropTypes.number,
 		lastTimeStamp: PropTypes.number,
 		limit: PropTypes.number,
+		loadingText: PropTypes.string,
 		noResultsText: PropTypes.string,
 		startingTimeStamp: PropTypes.number,
 		thumbExtension: PropTypes.string,
@@ -44,10 +45,11 @@ export default class ThumbsNails extends PureComponent {
 		interval: 20,
 		lastTimeStamp: 1503031520,
 		limit: 20,
+		loadingText: 'Loading...',
 		noResultsText: 'No Results Found',
 		startingTimeStamp: 1500348260,
 		thumbExtension: '.jpg',
-		urlPath: 'http://hiring.verkada.com/thumbs/'
+		urlPath: 'http://hiring.verkada.com/thumbs/',
 	}
 
 	constructor(props){
@@ -176,13 +178,14 @@ export default class ThumbsNails extends PureComponent {
 			props: {
 				endOfListText,
 				lastTimeStamp,
+				loadingText,
 				noResultsText
 			}
 		} = this;
 		
 		if(loading) {
 			return (
-				<h1 style={styles.titlesStyles}>Loading...</h1>
+				<h1 style={styles.titlesStyles}>${loadingText}</h1>
 			)
 		}
 		return(
