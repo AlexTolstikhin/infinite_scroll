@@ -4,7 +4,9 @@ import PropTypes from 'prop-types';
 const styles = ({
 	imageWrapper: {
 		margin: '0 10% auto',
-		maxWidth: '80%'
+		maxWidth: '80%',
+		height: '800px',
+		position: 'relative'
 	},
 	imageStyles: (screenWidth) => ({
 		borderRadius: '20px',
@@ -55,16 +57,21 @@ export default class Thumbsnails extends PureComponent {
 	constructor(props){
 		super(props);
 		this.imageRef = React.createRef();
+		this.scrollMe = React.createRef();
 		this.state = {
 			fetchedTimestamps: [],
 			loading: true,
 			screenWidth: 0,
-			startingTimeStamp: props.startingTimeStamp
+			pageOffsetY: 0,
+			startingTimeStamp: props.startingTimeStamp,
+			timestampsArray: []
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
 		this.renderThumbs = this.renderThumbs.bind(this);
 		this.updateScreenWidth = this.updateScreenWidth.bind(this);
+		this.whatToRender = this.whatToRender.bind(this);
+		this.filterArray = this.filterArray.bind(this);
 	}
 
 	componentDidMount() {
@@ -77,8 +84,37 @@ export default class Thumbsnails extends PureComponent {
 
 	componentWillMount() {
 		const {
-			props: { lastTimeStamp }
+			props: {
+				lastTimeStamp,
+				startingTimeStamp,
+				interval
+			},
+			state: {
+				pageOffsetY
+			}
 		} = this;
+
+		const test = () => {
+			let currentTimeStamp = startingTimeStamp;
+			const newArray = [];
+			let rowArray = [];
+			let counter = 0;
+			let itemHeight = 300;
+			for(let i = 0; i < (lastTimeStamp - startingTimeStamp) / interval; i++){
+				rowArray.push(currentTimeStamp += interval);
+				if(rowArray.length === 3) {
+					counter+=itemHeight
+					newArray.push({row: counter, thumbs: rowArray });
+					rowArray = []
+				}
+			}
+			return newArray
+		}
+		
+		this.setState({
+			timestampsArray: test()
+		});
+		
 
 		this.updateScreenWidth();
 		this.scrollListener = window.addEventListener("scroll", e => {
@@ -87,6 +123,8 @@ export default class Thumbsnails extends PureComponent {
 			if (imageTimeStamp < lastTimeStamp){
 				const lastImgOffset = currentImage.offsetTop + currentImage.clientHeight;
 				const pageOffset = window.pageYOffset + window.innerHeight;
+				console.log("window", window.pageYOffset);
+				console.log("lastImgOffset", lastImgOffset);
 				if(pageOffset > lastImgOffset) {
 					this.generateArrayOfTimestamps();
 				}
@@ -96,6 +134,13 @@ export default class Thumbsnails extends PureComponent {
 
 	componentWillUnmount() {
 		window.removeEventListener("resize", this.updateScreenWidth);
+	}
+
+	scrollMe (node) {
+		debugger;
+		if(node) {
+			node.addEventListener('scroll', () => {console.log('scroll')})
+		}
 	}
 
 	/**
@@ -112,7 +157,8 @@ export default class Thumbsnails extends PureComponent {
 			props: {
 				allowedTimestampsIntervals,
 				limit,
-				interval
+				interval,
+				lastTimeStamp
 			}
 		} = this;
 		let currentTimeStamp = startingTimeStamp;
@@ -120,6 +166,7 @@ export default class Thumbsnails extends PureComponent {
 			.apply(null, {length: limit < 20 ? 20 : limit})
 			.map(() => currentTimeStamp += interval)
 			.filter((item) => allowedTimestampsIntervals.includes(item.toString().slice(-2)));
+
 		this.setState({
 			startingTimeStamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
 			fetchedTimestamps: [...fetchedTimestamps, ...arrayOfTimeStamps]
@@ -134,7 +181,8 @@ export default class Thumbsnails extends PureComponent {
 	 */
 	updateScreenWidth() {
 		this.setState({
-			screenWidth: window.innerWidth
+			screenWidth: window.innerWidth,
+			pageOffsetY: window.pageYOffset
 		})
 	}
 
@@ -168,6 +216,17 @@ export default class Thumbsnails extends PureComponent {
 		})
 	}
 
+	filterArray(offSetTop, offSetBottom, limit=10) {
+		const { timestampsArray } = this.state;
+	
+		return timestampsArray.filter(item => item.row > offSetTop && item.row < offSetBottom);
+	}
+
+	whatToRender() {
+		console.log(this.scrollMe.current.scrollTop)
+		console.log(this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600))
+	}
+
 	render() {
 		const {
 			state: {
@@ -189,12 +248,18 @@ export default class Thumbsnails extends PureComponent {
 			)
 		}
 		return(
-			<div
-				style={styles.imageWrapper}
-			>
-				{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>{noResultsText}</h1>}
-				{!!fetchedTimestamps.length && this.renderThumbs()}
-				{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>{endOfListText}</h1>} 
+			<div style={styles.imageWrapper}>
+				<div
+					ref={this.scrollMe}
+					style={{ maxHeight: '600px',  overflowY: 'scroll'}}
+					onScroll={this.whatToRender}
+				>
+					<div style={{ height: '10000px' }}>
+						{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>{noResultsText}</h1>}
+						{!!fetchedTimestamps.length && this.renderThumbs()}
+						{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>{endOfListText}</h1>}
+					</div>
+				</div>
 			</div>
 		);
 	}
