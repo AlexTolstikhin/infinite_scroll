@@ -64,7 +64,8 @@ export default class Thumbsnails extends PureComponent {
 			screenWidth: 0,
 			pageOffsetY: 0,
 			startingTimeStamp: props.startingTimeStamp,
-			timestampsArray: []
+			timestampsArray: [],
+			timeStampsToRender: []
 		}
 
 		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
@@ -195,14 +196,15 @@ export default class Thumbsnails extends PureComponent {
 		const {
 			state: {
 				fetchedTimestamps,
-				screenWidth
+				screenWidth,
+				timeStampsToRender
 			},
 			props: {
 				thumbExtension,
 				urlPath
 			}
 		} = this;
-		return fetchedTimestamps.map((timeStamp) => {
+		return timeStampsToRender.map((timeStamp) => {
 			const url = `${urlPath}${timeStamp}${thumbExtension}`;
 			return(
 				<img
@@ -219,12 +221,16 @@ export default class Thumbsnails extends PureComponent {
 	filterArray(offSetTop, offSetBottom, limit=10) {
 		const { timestampsArray } = this.state;
 	
-		return timestampsArray.filter(item => item.row > offSetTop && item.row < offSetBottom);
+		const newArray = [].concat.apply([], timestampsArray.filter(item => item.row > offSetTop && item.row < offSetBottom).map(row => row.thumbs));
+		return newArray
 	}
-
+ 
 	whatToRender() {
 		console.log(this.scrollMe.current.scrollTop)
-		console.log(this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600))
+		console.log(this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600));
+		this.setState({
+			timeStampsToRender: this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600)
+		})
 	}
 
 	render() {
