@@ -78,20 +78,15 @@ export default class Thumbsnails extends PureComponent {
 		const { startingTimeStamp, lastTimeStamp, interval, rowHeight, numberOfRowsToRender } = this.props;
 		const { thumbsInRow } = this.state
 		const length = (lastTimeStamp - startingTimeStamp) / interval;
-		let rowCounter = 0;
 		let rowHeightCounter = 0;
-		let sliceFrom = 0;
-		let sliceTo = 0;
-		const arrayOfThumbs = [];
 		let currentTimeStamp = startingTimeStamp;
 		const arrayOfAllTimesStamps = new Array(length)
 			.fill(0)
-			.map((item) => {
+			.map((item, index) => {
 				const arrayOfThumbs = [currentTimeStamp+=interval, currentTimeStamp+=interval, currentTimeStamp+=interval];
 				return {
-					index: rowHeightCounter += rowHeight,
+					index: index === 0 ? rowHeightCounter : rowHeightCounter += rowHeight,
 					values: arrayOfThumbs
-
 				}
 			})
 		this.setState({
