@@ -1,22 +1,20 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import debounce from 'lodash/debounce'
 
 const styles = ({
 	imageWrapper: {
 		margin: '0 10% auto',
 		maxWidth: '80%',
-		height: '800px',
+		height: '100%',
 		position: 'relative'
 	},
-	imageStyles: (screenWidth) => ({
+	imageStyles: () => ({
 		borderRadius: '20px',
-		display: screenWidth > 400 ? 'inline-block' : 'block',
-		height: 'auto',
+		height: '100px',
 		margin: '1%',
 		maxWidth: '98%',
-		width:	screenWidth > 600 ? '30%'
-			: screenWidth < 600 && screenWidth > 400 ? '45%'
-			: '100%'
+		width: "30%",
 	}),
 	mainWrapper: {
 		border: '2px solid grey',
@@ -52,159 +50,78 @@ export default class Thumbsnails extends PureComponent {
 		startingTimeStamp: 1500348260,
 		thumbExtension: '.jpg',
 		urlPath: 'http://hiring.verkada.com/thumbs/',
+		rowHeight: 100,
+		numberOfRowsToRender: 10
+		
 	}
 
 	constructor(props){
 		super(props);
-		this.imageRef = React.createRef();
-		this.scrollMe = React.createRef();
+		this.divRef = React.createRef();
 		this.state = {
-			fetchedTimestamps: [],
-			loading: true,
-			screenWidth: 0,
-			pageOffsetY: 0,
-			startingTimeStamp: props.startingTimeStamp,
-			timestampsArray: [],
-			timeStampsToRender: []
+			thumbsInRow: 3,
+			arrayOfItems: [],
+			arrayOfAllItems: [],
+			range: 0,
+			loading: false
 		}
-
-		this.generateArrayOfTimestamps = this.generateArrayOfTimestamps.bind(this);
+		this.showLoading = this.showLoading.bind(this);
+		this.onScroll = debounce(this.onScroll.bind(this), 100);
 		this.renderThumbs = this.renderThumbs.bind(this);
-		this.updateScreenWidth = this.updateScreenWidth.bind(this);
-		this.whatToRender = this.whatToRender.bind(this);
-		this.filterArray = this.filterArray.bind(this);
 	}
 
 	componentDidMount() {
-		window.addEventListener("resize", this.updateScreenWidth);
-		this.generateArrayOfTimestamps();
-		this.setState({
-			loading: false
-		})
+		
 	}
 
 	componentWillMount() {
-		const {
-			props: {
-				lastTimeStamp,
-				startingTimeStamp,
-				interval
-			},
-			state: {
-				pageOffsetY
-			}
-		} = this;
-
-		const test = () => {
-			let currentTimeStamp = startingTimeStamp;
-			const newArray = [];
-			let rowArray = [];
-			let counter = 0;
-			let itemHeight = 300;
-			for(let i = 0; i < (lastTimeStamp - startingTimeStamp) / interval; i++){
-				rowArray.push(currentTimeStamp += interval);
-				if(rowArray.length === 3) {
-					counter+=itemHeight
-					newArray.push({row: counter, thumbs: rowArray });
-					rowArray = []
-				}
-			}
-			return newArray
-		}
-		
-		this.setState({
-			timestampsArray: test()
-		});
-		
-
-		this.updateScreenWidth();
-		this.scrollListener = window.addEventListener("scroll", e => {
-			const currentImage = this.imageRef.current;
-			const imageTimeStamp = currentImage ? parseInt(currentImage.alt) : lastTimeStamp;
-			if (imageTimeStamp < lastTimeStamp){
-				const lastImgOffset = currentImage.offsetTop + currentImage.clientHeight;
-				const pageOffset = window.pageYOffset + window.innerHeight;
-				console.log("window", window.pageYOffset);
-				console.log("lastImgOffset", lastImgOffset);
-				if(pageOffset > lastImgOffset) {
-					this.generateArrayOfTimestamps();
-				}
-			}
-		});
-	}
-
-	componentWillUnmount() {
-		window.removeEventListener("resize", this.updateScreenWidth);
-	}
-
-	scrollMe (node) {
-		debugger;
-		if(node) {
-			node.addEventListener('scroll', () => {console.log('scroll')})
-		}
-	}
-
-	/**
-	 * generateArrayOfTimestamps method that updates startingTimeStamp and fetchedTimestamps array in state
-	 *
-	 * @return  {Object} new state  
-	 */
-	generateArrayOfTimestamps() {
-		const {
-			state: {
-				fetchedTimestamps,
-				startingTimeStamp
-			},
-			props: {
-				allowedTimestampsIntervals,
-				limit,
-				interval,
-				lastTimeStamp
-			}
-		} = this;
+		const { startingTimeStamp, lastTimeStamp, interval, rowHeight, numberOfRowsToRender } = this.props;
+		const { thumbsInRow } = this.state
+		const length = (lastTimeStamp - startingTimeStamp) / interval;
+		let rowCounter = 0;
+		let rowHeightCounter = 0;
+		let sliceFrom = 0;
+		let sliceTo = 0;
+		const arrayOfThumbs = [];
 		let currentTimeStamp = startingTimeStamp;
-		const arrayOfTimeStamps = Array
-			.apply(null, {length: limit < 20 ? 20 : limit})
-			.map(() => currentTimeStamp += interval)
-			.filter((item) => allowedTimestampsIntervals.includes(item.toString().slice(-2)));
+		const arrayOfAllTimesStamps = new Array(length)
+			.fill(0)
+			.map((item) => {
+				const arrayOfThumbs = [currentTimeStamp+=interval, currentTimeStamp+=interval, currentTimeStamp+=interval];
+				return {
+					index: rowHeightCounter += rowHeight,
+					values: arrayOfThumbs
 
+				}
+			})
 		this.setState({
-			startingTimeStamp: arrayOfTimeStamps[arrayOfTimeStamps.length - 1],
-			fetchedTimestamps: [...fetchedTimestamps, ...arrayOfTimeStamps]
-		})
-
-	}
-
-	/**
-	 * updateScreenWidth updates screenWidth state prop
-	 *
-	 * @return  {Object}  new state
-	 */
-	updateScreenWidth() {
-		this.setState({
-			screenWidth: window.innerWidth,
-			pageOffsetY: window.pageYOffset
+			arrayOfAllItems: arrayOfAllTimesStamps,
+			arrayOfItems: arrayOfAllTimesStamps.slice(0, numberOfRowsToRender),
+			range: rowHeight * numberOfRowsToRender
 		})
 	}
 
-	/**
-	 * renderThumbs renders thumbs
-	 *
-	 * @return  {Node} 
-	 */
-	renderThumbs() {
-		const {
-			state: {
-				fetchedTimestamps,
-				screenWidth,
-				timeStampsToRender
-			},
-			props: {
-				thumbExtension,
-				urlPath
-			}
-		} = this;
-		return timeStampsToRender.map((timeStamp) => {
+	showLoading () {
+		this.setState({
+			loading: true
+		});
+		this.onScroll();
+	}
+
+	onScroll() {
+		const { arrayOfAllItems } = this.state;
+		const { range } = this.state;
+		this.setState({
+			loading: false
+		});
+		this.setState({
+			arrayOfItems: arrayOfAllItems.filter(item => item.index > this.divRef.current.scrollTop - range && item.index < this.divRef.current.scrollTop + range)
+		})
+	}
+
+	renderThumbs(thumbsArray) {
+		const { urlPath, thumbExtension } = this.props;
+		return thumbsArray.map((timeStamp) => {
 			const url = `${urlPath}${timeStamp}${thumbExtension}`;
 			return(
 				<img
@@ -212,61 +129,32 @@ export default class Thumbsnails extends PureComponent {
 					ref={this.imageRef}
 					alt={timeStamp}
 					src={url}
-					style={styles.imageStyles(screenWidth)}
+					style={styles.imageStyles()}
 				/>
 			);
 		})
+
 	}
 
-	filterArray(offSetTop, offSetBottom, limit=10) {
-		const { timestampsArray } = this.state;
-	
-		const newArray = [].concat.apply([], timestampsArray.filter(item => item.row > offSetTop && item.row < offSetBottom).map(row => row.thumbs));
-		return newArray
-	}
- 
-	whatToRender() {
-		console.log(this.scrollMe.current.scrollTop)
-		console.log(this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600));
-		this.setState({
-			timeStampsToRender: this.filterArray(this.scrollMe.current.scrollTop, this.scrollMe.current.scrollTop+600)
-		})
+	renderItems() {
+		const { arrayOfItems } = this.state;
+
+		return arrayOfItems.map(item => <div key={item.index} style={{ height: '50px', left: '0px', position: 'absolute', top: `${item.index}px`, width: '100%' }}>{this.renderThumbs(item.values)}</div>)
 	}
 
 	render() {
-		const {
-			state: {
-				fetchedTimestamps,
-				loading,
-				startingTimeStamp
-			},
-			props: {
-				endOfListText,
-				lastTimeStamp,
-				loadingText,
-				noResultsText
-			}
-		} = this;
-		
-		if(loading) {
-			return (
-				<h1 style={styles.titlesStyles}>${loadingText}</h1>
-			)
-		}
+		const { loading } = this.state;
 		return(
-			<div style={styles.imageWrapper}>
-				<div
-					ref={this.scrollMe}
-					style={{ maxHeight: '600px',  overflowY: 'scroll'}}
-					onScroll={this.whatToRender}
-				>
-					<div style={{ height: '10000px' }}>
-						{!fetchedTimestamps.length && <h1 style={styles.titlesStyles}>{noResultsText}</h1>}
-						{!!fetchedTimestamps.length && this.renderThumbs()}
-						{startingTimeStamp >= lastTimeStamp && <h1 style={styles.titlesStyles}>{endOfListText}</h1>}
+			<div style={{ position: "relative", width: '589px' }}>
+				{loading && <div style={{ position: 'absolute', top: '50%', left: '50%' }}>Loading</div>}
+				<div style={{ overflow: 'visible', width: '0px' }}>
+					<div onScroll={this.showLoading} ref={this.divRef} style={{ boxSizing: 'border-box', direction: 'ltr', height: '300px', position: 'relative', width: '589px', willChange: 'transform', overflow: 'hidden auto' }} >
+						<div style={{ width: 'auto', height: '50000px', maxWidth: '100%', maxHeight: '50000px', overflow: 'hidden', position: 'relative' }}>
+							{this.renderItems()}
+						</div>
 					</div>
 				</div>
 			</div>
-		);
+		)
 	}
 }
