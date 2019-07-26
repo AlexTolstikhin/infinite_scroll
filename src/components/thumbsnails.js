@@ -5,8 +5,9 @@ import debounce from 'lodash/debounce'
 const styles = ({
 	imageStyles: (rowHeight, thumbsInRow) => ({
 		borderRadius: '20px',
-		height: `${rowHeight - 15}px`,
-		margin: '1%',
+		// height: `80%`,
+		margin: '5% 1% 0 1%',
+		verticalAlign: 'initial',
 		maxWidth: '98%',
 		width: thumbsInRow === 3
 			? "30%"

@@ -25,7 +25,8 @@ export default class App extends PureComponent {
 	constructor(props) {
 		super(props);
 		this.state = {
-			thumbsInRow: 3
+			thumbsInRow: 3,
+			rowHeight: 250
 		}
 	}
 
@@ -38,7 +39,7 @@ export default class App extends PureComponent {
 
 
 	render() {
-		const { thumbsInRow } = this.state;
+		const { thumbsInRow, rowHeight } = this.state;
 		return (
 			<div className="App">
 				<div>
@@ -50,7 +51,7 @@ export default class App extends PureComponent {
 							listHeight={600}
 							listWidth={900}
 							numberOfRowsToRender={10}
-							rowHeight={350}
+							rowHeight={thumbsInRow === 3 ? rowHeight : (rowHeight / thumbsInRow) + rowHeight * 0.2}
 							thumbsInRow={thumbsInRow}
 						/>
 					</div>
