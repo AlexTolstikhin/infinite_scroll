@@ -3,12 +3,6 @@ import PropTypes from 'prop-types';
 import debounce from 'lodash/debounce'
 
 const styles = ({
-	imageWrapper: {
-		margin: '0 10% auto',
-		maxWidth: '80%',
-		height: '100%',
-		position: 'relative'
-	},
 	imageStyles: () => ({
 		borderRadius: '20px',
 		height: '100px',
@@ -16,13 +10,13 @@ const styles = ({
 		maxWidth: '98%',
 		width: "30%",
 	}),
-	mainWrapper: {
-		border: '2px solid grey',
-		margin: '0 10% auto'
-	},
-	titlesStyles: {
-		textAlign: 'center'
-	}
+	listItemWrapper: (height) => ({
+		width: 'auto',
+		height: height, // calculate in state
+		maxWidth: '100%',
+		overflow: 'hidden',
+		position: 'relative'
+	})
 })
 
 export default class Thumbsnails extends PureComponent {
@@ -51,7 +45,7 @@ export default class Thumbsnails extends PureComponent {
 		thumbExtension: '.jpg',
 		urlPath: 'http://hiring.verkada.com/thumbs/',
 		rowHeight: 100,
-		numberOfRowsToRender: 10
+		numberOfRowsToRender: 20
 		
 	}
 
@@ -59,11 +53,12 @@ export default class Thumbsnails extends PureComponent {
 		super(props);
 		this.divRef = React.createRef();
 		this.state = {
-			thumbsInRow: 3,
-			arrayOfItems: [],
 			arrayOfAllItems: [],
+			arrayOfItems: [],
+			listItemWrapperHeight: 0,
+			loading: false,
 			range: 0,
-			loading: false
+			thumbsInRow: 3
 		}
 		this.showLoading = this.showLoading.bind(this);
 		this.onScroll = debounce(this.onScroll.bind(this), 100);
@@ -92,7 +87,8 @@ export default class Thumbsnails extends PureComponent {
 		this.setState({
 			arrayOfAllItems: arrayOfAllTimesStamps,
 			arrayOfItems: arrayOfAllTimesStamps.slice(0, numberOfRowsToRender),
-			range: rowHeight * numberOfRowsToRender
+			range: rowHeight * numberOfRowsToRender,
+			listItemWrapper: length * numberOfRowsToRender
 		})
 	}
 
@@ -138,13 +134,24 @@ export default class Thumbsnails extends PureComponent {
 	}
 
 	render() {
-		const { loading } = this.state;
+		const { listItemWrapper, loading } = this.state;
 		return(
-			<div style={{ position: "relative", width: '589px' }}>
-				{loading && <div style={{ position: 'absolute', top: '50%', left: '50%' }}>Loading</div>}
+			<div style={{ position: "relative", width: '100%' }}>
+				{loading && <div style={{ position: 'absolute', top: '50%', left: '50%' }}>Loading...</div>}
 				<div style={{ overflow: 'visible', width: '0px' }}>
-					<div onScroll={this.showLoading} ref={this.divRef} style={{ boxSizing: 'border-box', direction: 'ltr', height: '300px', position: 'relative', width: '589px', willChange: 'transform', overflow: 'hidden auto' }} >
-						<div style={{ width: 'auto', height: '50000px', maxWidth: '100%', maxHeight: '50000px', overflow: 'hidden', position: 'relative' }}>
+					<div
+						ref={this.divRef}
+						onScroll={this.showLoading}
+						style={{ 
+							boxSizing: 'border-box',
+							direction: 'ltr',
+							height: '300px',
+							position: 'relative',
+							width: '589px',
+							willChange: 'transform',
+							overflow: 'hidden auto'
+						}}>
+						<div style={styles.listItemWrapper(listItemWrapper)}>
 							{this.renderItems()}
 						</div>
 					</div>
