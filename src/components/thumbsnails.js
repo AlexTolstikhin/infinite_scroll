@@ -32,12 +32,7 @@ const styles = ({
 		position: 'relative',
 		width: '100%',
 		willChange: 'transform'
-	}),
-	loadingMsgStyles: {
-		left: '50%',
-		position: 'absolute',
-		top: '50%'
-	}
+	})
 })
 
 export default class Thumbsnails extends PureComponent {
@@ -69,20 +64,13 @@ export default class Thumbsnails extends PureComponent {
 		this.state = {
 			arrayOfAllItems: [],
 			arrayOfItems: [],
+			clientWidth: window.innerWidth,
 			listItemWrapperHeight: 0,
-			loading: false,
 			range: 0,
 			thumbsInRow: 3
 		}
 		this.onScroll = debounce(this.onScroll.bind(this), 100);
 		this.renderThumbs = this.renderThumbs.bind(this);
-		this.showLoading = this.showLoading.bind(this);
-		this.updateWidth = this.updateWidth.bind(this);
-	}
-
-	componentDidMount() {
-		this.updateWidth();
-		window.addEventListener("resize", this.updateWidth())
 	}
 
 	componentWillMount() {
@@ -99,9 +87,9 @@ export default class Thumbsnails extends PureComponent {
 				thumbsInRow
 			}
 		} = this;
+
 		// Count all timestamps
 		const length = Math.floor((lastTimeStamp - startingTimeStamp) / interval);
-		
 		// Create array of all timestamps and items through validation;
 		let currentTimeStamp = startingTimeStamp;
 		const arrayOfAllTimestamps = new Array(length)
@@ -133,11 +121,8 @@ export default class Thumbsnails extends PureComponent {
 		})
 	}
 
-	showLoading () {
-		this.setState({
-			loading: true
-		});
-		this.onScroll();
+	componentWillUnmount() {
+		window.removeEventListener('resize', this.resize)
 	}
 
 	// Method that filters the array of items and determines what should be rendered
@@ -147,13 +132,14 @@ export default class Thumbsnails extends PureComponent {
 			range
 		} = this.state;
 		this.setState({
-			arrayOfItems: arrayOfAllItems.filter(item => item.index > this.divRef.current.scrollTop - range && item.index < this.divRef.current.scrollTop + range),
-			loading: false
+			arrayOfItems: arrayOfAllItems.filter(item => item.index > this.divRef.current.scrollTop - range && item.index < this.divRef.current.scrollTop + range)
 		})
 	}
 
 	updateWidth() {
-
+		this.setState({
+			clientWidth: window.innerWidth
+		})
 	}
 
 
@@ -194,7 +180,8 @@ export default class Thumbsnails extends PureComponent {
 	render() {
 		const {
 			props: {
-				listHeight
+				listHeight,
+				listWidth
 			},
 			state: {
 				listItemWrapperHeight,
@@ -203,10 +190,10 @@ export default class Thumbsnails extends PureComponent {
 			} = this;
 		return(
 			<div>
-				{loading && <div style={styles.loadingMsgStyles}>Loading...</div>}
+				{loading && <div style={styles.loadingMsgStyles(listWidth)}>Searching for thumbs...</div>}
 				<div
 					ref={this.divRef}
-					onScroll={this.showLoading}
+					onScroll={this.onScroll}
 					style={styles.listStyles(listHeight)}>
 					<div style={styles.listItemWrapper(listItemWrapperHeight)}>
 						{this.renderItems()}
