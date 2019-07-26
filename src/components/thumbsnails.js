@@ -3,12 +3,16 @@ import PropTypes from 'prop-types';
 import debounce from 'lodash/debounce'
 
 const styles = ({
-	imageStyles: (rowHeight) => ({
+	imageStyles: (rowHeight, thumbsInRow) => ({
 		borderRadius: '20px',
 		height: `${rowHeight - 15}px`,
 		margin: '1%',
 		maxWidth: '98%',
-		width: "30%"
+		width: thumbsInRow === 3
+			? "30%"
+			: thumbsInRow === 2
+			? "40%"
+			: "80%"
 	}),
 	listItemWrapper: (height) => ({
 		height: height,
@@ -45,7 +49,8 @@ export default class Thumbsnails extends PureComponent {
 		rowHeight: PropTypes.number.isRequired,
 		startingTimeStamp: PropTypes.number,
 		thumbExtension: PropTypes.string,
-		urlPath: PropTypes.string,
+		thumbsInRow: PropTypes.number,
+		urlPath: PropTypes.string
 	}
 
 	static defaultProps = {
@@ -55,7 +60,8 @@ export default class Thumbsnails extends PureComponent {
 		rowHeight: 100,
 		startingTimeStamp: 1500348260,
 		thumbExtension: '.jpg',
-		urlPath: 'http://hiring.verkada.com/thumbs/'
+		thumbsInRow: 3,
+		urlPath: 'http://hiring.verkada.com/thumbs/',
 	}
 
 	constructor(props){
@@ -64,10 +70,8 @@ export default class Thumbsnails extends PureComponent {
 		this.state = {
 			arrayOfAllItems: [],
 			arrayOfItems: [],
-			clientWidth: window.innerWidth,
 			listItemWrapperHeight: 0,
-			range: 0,
-			thumbsInRow: 3
+			range: 0
 		}
 		this.onScroll = debounce(this.onScroll.bind(this), 100);
 		this.renderThumbs = this.renderThumbs.bind(this);
@@ -75,18 +79,14 @@ export default class Thumbsnails extends PureComponent {
 
 	componentWillMount() {
 		const {
-			props: {
-				allowedTimestampsIntervals,
-				interval,
-				lastTimeStamp,
-				numberOfRowsToRender,
-				rowHeight,
-				startingTimeStamp
-			},
-			state: {
-				thumbsInRow
-			}
-		} = this;
+			allowedTimestampsIntervals,
+			interval,
+			lastTimeStamp,
+			numberOfRowsToRender,
+			rowHeight,
+			startingTimeStamp,
+			thumbsInRow
+		} = this.props;
 
 		// Count all timestamps
 		const length = Math.floor((lastTimeStamp - startingTimeStamp) / interval);
@@ -121,10 +121,6 @@ export default class Thumbsnails extends PureComponent {
 		})
 	}
 
-	componentWillUnmount() {
-		window.removeEventListener('resize', this.resize)
-	}
-
 	// Method that filters the array of items and determines what should be rendered
 	onScroll() {
 		const {
@@ -136,17 +132,11 @@ export default class Thumbsnails extends PureComponent {
 		})
 	}
 
-	updateWidth() {
-		this.setState({
-			clientWidth: window.innerWidth
-		})
-	}
-
-
 	renderThumbs(thumbsArray) {
 		const {
 			rowHeight,
 			thumbExtension,
+			thumbsInRow,
 			urlPath
 		} = this.props;
 
@@ -158,7 +148,7 @@ export default class Thumbsnails extends PureComponent {
 					key={timestamp}
 					alt={timestamp}
 					src={url}
-					style={styles.imageStyles(rowHeight)}
+					style={styles.imageStyles(rowHeight, thumbsInRow)}
 				/>
 			);
 		})
@@ -180,17 +170,14 @@ export default class Thumbsnails extends PureComponent {
 	render() {
 		const {
 			props: {
-				listHeight,
-				listWidth
+				listHeight
 			},
 			state: {
 				listItemWrapperHeight,
-				loading
 			}
 			} = this;
 		return(
 			<div>
-				{loading && <div style={styles.loadingMsgStyles(listWidth)}>Searching for thumbs...</div>}
 				<div
 					ref={this.divRef}
 					onScroll={this.onScroll}
