@@ -3,50 +3,64 @@ import PropTypes from 'prop-types';
 import debounce from 'lodash/debounce'
 
 const styles = ({
-	imageStyles: () => ({
+	imageStyles: (rowHeight) => ({
 		borderRadius: '20px',
-		height: '100px',
+		height: `${rowHeight - 15}px`,
 		margin: '1%',
 		maxWidth: '98%',
-		width: "30%",
+		width: "30%"
 	}),
 	listItemWrapper: (height) => ({
-		width: 'auto',
-		height: height, // calculate in state
+		height: height,
 		maxWidth: '100%',
 		overflow: 'hidden',
-		position: 'relative'
-	})
+		position: 'relative',
+		width: 'auto'
+	}),
+	listItemStyles: (height) => ({
+		height: '50px',
+		left: '0px',
+		position: 'absolute',
+		top: `${height}px`,
+		width: '100%'
+	}),
+	listStyles: (listHeight) => ({
+		boxSizing: 'border-box',
+		direction: 'ltr',
+		height: `${listHeight}px`,
+		overflow: 'hidden auto',
+		position: 'relative',
+		width: '100%',
+		willChange: 'transform'
+	}),
+	loadingMsgStyles: {
+		left: '50%',
+		position: 'absolute',
+		top: '50%'
+	}
 })
 
 export default class Thumbsnails extends PureComponent {
 	static propTypes = {
 		allowedTimestampsIntervals: PropTypes.array,
-		endOfListText: PropTypes.string,
 		interval: PropTypes.number,
 		lastTimeStamp: PropTypes.number,
-		limit: PropTypes.number,
-		loadingText: PropTypes.string,
-		noResultsText: PropTypes.string,
+		listHeight: PropTypes.number.isRequired,
+		numberOfRowsToRender: PropTypes.number.isRequired,
+		rowHeight: PropTypes.number.isRequired,
 		startingTimeStamp: PropTypes.number,
 		thumbExtension: PropTypes.string,
-		urlPath: PropTypes.string
+		urlPath: PropTypes.string,
 	}
 
 	static defaultProps = {
 		allowedTimestampsIntervals: ['20', '40', '60', '80', '00'],
-		endOfListText: 'End of List',
 		interval: 20,
 		lastTimeStamp: 1503031520,
-		limit: 20,
-		loadingText: 'Loading...',
-		noResultsText: 'No Results Found',
+		rowHeight: 100,
 		startingTimeStamp: 1500348260,
 		thumbExtension: '.jpg',
-		urlPath: 'http://hiring.verkada.com/thumbs/',
-		rowHeight: 100,
-		numberOfRowsToRender: 20
-		
+		urlPath: 'http://hiring.verkada.com/thumbs/'
 	}
 
 	constructor(props){
@@ -60,35 +74,62 @@ export default class Thumbsnails extends PureComponent {
 			range: 0,
 			thumbsInRow: 3
 		}
-		this.showLoading = this.showLoading.bind(this);
 		this.onScroll = debounce(this.onScroll.bind(this), 100);
 		this.renderThumbs = this.renderThumbs.bind(this);
+		this.showLoading = this.showLoading.bind(this);
+		this.updateWidth = this.updateWidth.bind(this);
 	}
 
 	componentDidMount() {
-		
+		this.updateWidth();
+		window.addEventListener("resize", this.updateWidth())
 	}
 
 	componentWillMount() {
-		const { startingTimeStamp, lastTimeStamp, interval, rowHeight, numberOfRowsToRender } = this.props;
-		const { thumbsInRow } = this.state
-		const length = (lastTimeStamp - startingTimeStamp) / interval;
-		let rowHeightCounter = 0;
+		const {
+			props: {
+				allowedTimestampsIntervals,
+				interval,
+				lastTimeStamp,
+				numberOfRowsToRender,
+				rowHeight,
+				startingTimeStamp
+			},
+			state: {
+				thumbsInRow
+			}
+		} = this;
+		// Count all timestamps
+		const length = Math.floor((lastTimeStamp - startingTimeStamp) / interval);
+		
+		// Create array of all timestamps and items through validation;
 		let currentTimeStamp = startingTimeStamp;
-		const arrayOfAllTimesStamps = new Array(length)
+		const arrayOfAllTimestamps = new Array(length)
+			.fill(0)
+			.map(() => currentTimeStamp+=interval)
+			.filter(timestamp => allowedTimestampsIntervals.includes(timestamp.toString().slice(-2)));
+		
+		// Create array of object that we will use to render timestamps
+		// { index: index is the absolute heigth of the row; values: array of timestamps}
+		let indexToStartSlice = 0;
+		let indexToEndSlice = thumbsInRow;
+		let rowHeightCounter = 0;
+		const arrayOfObjectsToRender = new Array(length)
 			.fill(0)
 			.map((item, index) => {
-				const arrayOfThumbs = [currentTimeStamp+=interval, currentTimeStamp+=interval, currentTimeStamp+=interval];
+				const arrayOfThumbs = arrayOfAllTimestamps.slice(indexToStartSlice, indexToEndSlice);
+				indexToStartSlice = indexToEndSlice;
+				indexToEndSlice += thumbsInRow;
 				return {
 					index: index === 0 ? rowHeightCounter : rowHeightCounter += rowHeight,
 					values: arrayOfThumbs
 				}
-			})
+			});
 		this.setState({
-			arrayOfAllItems: arrayOfAllTimesStamps,
-			arrayOfItems: arrayOfAllTimesStamps.slice(0, numberOfRowsToRender),
+			arrayOfAllItems: arrayOfObjectsToRender,
+			arrayOfItems: arrayOfObjectsToRender.slice(0, numberOfRowsToRender),
 			range: rowHeight * numberOfRowsToRender,
-			listItemWrapper: length * numberOfRowsToRender
+			listItemWrapperHeight: (length / thumbsInRow) * rowHeight
 		})
 	}
 
@@ -99,28 +140,39 @@ export default class Thumbsnails extends PureComponent {
 		this.onScroll();
 	}
 
+	// Method that filters the array of items and determines what should be rendered
 	onScroll() {
-		const { arrayOfAllItems } = this.state;
-		const { range } = this.state;
+		const {
+			arrayOfAllItems,
+			range
+		} = this.state;
 		this.setState({
+			arrayOfItems: arrayOfAllItems.filter(item => item.index > this.divRef.current.scrollTop - range && item.index < this.divRef.current.scrollTop + range),
 			loading: false
-		});
-		this.setState({
-			arrayOfItems: arrayOfAllItems.filter(item => item.index > this.divRef.current.scrollTop - range && item.index < this.divRef.current.scrollTop + range)
 		})
 	}
 
+	updateWidth() {
+
+	}
+
+
 	renderThumbs(thumbsArray) {
-		const { urlPath, thumbExtension } = this.props;
-		return thumbsArray.map((timeStamp) => {
-			const url = `${urlPath}${timeStamp}${thumbExtension}`;
+		const {
+			rowHeight,
+			thumbExtension,
+			urlPath
+		} = this.props;
+
+		return thumbsArray.map((timestamp) => {
+			const url = `${urlPath}${timestamp}${thumbExtension}`;
 			return(
 				<img
-					key={timeStamp}
 					ref={this.imageRef}
-					alt={timeStamp}
+					key={timestamp}
+					alt={timestamp}
 					src={url}
-					style={styles.imageStyles()}
+					style={styles.imageStyles(rowHeight)}
 				/>
 			);
 		})
@@ -129,31 +181,35 @@ export default class Thumbsnails extends PureComponent {
 
 	renderItems() {
 		const { arrayOfItems } = this.state;
-
-		return arrayOfItems.map(item => <div key={item.index} style={{ height: '50px', left: '0px', position: 'absolute', top: `${item.index}px`, width: '100%' }}>{this.renderThumbs(item.values)}</div>)
+		return arrayOfItems.map(item =>
+			<div
+				key={item.index}
+				style={styles.listItemStyles(item.index)}
+			>
+				{this.renderThumbs(item.values)}
+			</div>
+		);
 	}
 
 	render() {
-		const { listItemWrapper, loading } = this.state;
+		const {
+			props: {
+				listHeight
+			},
+			state: {
+				listItemWrapperHeight,
+				loading
+			}
+			} = this;
 		return(
-			<div style={{ position: "relative", width: '100%' }}>
-				{loading && <div style={{ position: 'absolute', top: '50%', left: '50%' }}>Loading...</div>}
-				<div style={{ overflow: 'visible', width: '0px' }}>
-					<div
-						ref={this.divRef}
-						onScroll={this.showLoading}
-						style={{ 
-							boxSizing: 'border-box',
-							direction: 'ltr',
-							height: '300px',
-							position: 'relative',
-							width: '589px',
-							willChange: 'transform',
-							overflow: 'hidden auto'
-						}}>
-						<div style={styles.listItemWrapper(listItemWrapper)}>
-							{this.renderItems()}
-						</div>
+			<div>
+				{loading && <div style={styles.loadingMsgStyles}>Loading...</div>}
+				<div
+					ref={this.divRef}
+					onScroll={this.showLoading}
+					style={styles.listStyles(listHeight)}>
+					<div style={styles.listItemWrapper(listItemWrapperHeight)}>
+						{this.renderItems()}
 					</div>
 				</div>
 			</div>
